@@ -5,8 +5,8 @@ Server: require('mongodb/connection').Server
 MessageProvider: (host, port) -> 
   @db: new Db('chat-local', new Server(host, port, {auto_reconnect: true}, {}))
   @db.open(() -> {})
-  # @db.collection 'messages', (error, message_collection) -> 
-  #   message_collection.ensureIndex( { location: "2d" } )
+  @db.collection 'messages', (error, message_collection) -> 
+    message_collection.ensureIndex([[ 'location', '2d'  ]], () -> {})
 
 MessageProvider::getCollection: (callback) -> 
   @db.collection 'messages', (error, message_collection) ->

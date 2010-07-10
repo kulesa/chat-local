@@ -23,7 +23,6 @@ get '/', ->
   @redirect '/chat'
 
 get '/chat', -> 
-  @session.id: or Math.random()
   @session.name: or 'Guest'
   @session.lat: or 37.790234970864
   @session.lng: or -122.39031314844
