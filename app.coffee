@@ -14,7 +14,7 @@ configure( ->
   use ContentLength
   use Cookie
   use Cache, { lifetime: (5).minutes, reapInterval: (1).minute }
-  use Session, { lifetime: (15).minutes, reapInterval: (1).minute }
+  use Session, { lifetime: (15).minutes, reapInterval: (1).minute }  
   use Static
   set 'root', __dirname
 )
@@ -27,6 +27,7 @@ get '/chat', ->
   @session.lat: or 37.790234970864
   @session.lng: or -122.39031314844
   @session.distance: or 50
+  @session.updated: false
 
   messageProvider.findLocal @session.lat, @session.lng, @session.distance, (err, messages) => 
     @render 'chat.html.haml', {
@@ -38,9 +39,10 @@ get '/chat', ->
     }
 
 post '/updateLocation', -> 
-  @session.lat = @param 'lat'
-  @session.lng = @param 'lng'
-  @session.distance = @param 'distance'
+  @session.lat: @param 'lat'
+  @session.lng: @param 'lng'
+  @session.distance: @param 'distance'
+  @session.updated: true
   @respond 200
   
 post '/chat', ->     
@@ -63,8 +65,9 @@ get '/chat/messages', ->
       previousLength: count   
       updateOnTimer: => 
         messageProvider.getCount (err, cnt) =>           
-          if cnt > previousLength
+          if (cnt > previousLength) or @session.updated
             messageProvider.findLocal @session.lat, @session.lng, @session.distance, (error, messages) => 
+              @session.updated: false
               @contentType 'json'
               previousLength: cnt
               json_messages: messages.map (m) ->
