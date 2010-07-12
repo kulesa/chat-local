@@ -5,6 +5,11 @@ This is a simple location-based chat, which I wrote to practice in Coffeescript,
 
 Google Maps widgets shamelessly borrowed from this article: [Fun with MVC Objects](http://code.google.com/intl/en-EN/apis/maps/articles/mvcfun.html), and Chat application is based on the example in [Express](http://github.com/visionmedia/express) repo. 
 
+Live Demo
+---------
+
+Live demo is available here: [http://letscome.ru:3000](http://letscome.ru:3000)
+
 
 Running
 -------
