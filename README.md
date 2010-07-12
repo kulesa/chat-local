@@ -17,9 +17,9 @@ Running
 Prequisites:
 
   0. [node.js](http://nodejs.org/)
-  1. [Git](http://git-scm.com/)
-  2. [Express](http://github.com/visionmedia/express)
-  3. [MongoDB](http://www.mongodb.org) 
+  1. [Express](http://github.com/visionmedia/express)
+  2. [CoffeeScript](http://jashkenas.github.com/coffee-script/)
+  2. [MongoDB](http://www.mongodb.org) 
 
 Download the code
 
