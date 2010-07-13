@@ -34,9 +34,9 @@ MessageProvider::findLocal: (lat, lng, distance, callback) ->
       center: [lat, lng]
       radius: distance / 112.63
       query: {"location" : {"\$within" : {"\$center" : [center, radius]}}}
-      orderby: {"_id" : 1 }
+      limit: {limit: 30, sort: [["_id", -1]] }
       console.log "Querying: " + lat.toString() + " : " + lng.toString() + ", " + distance.toString()
-      message_collection.find {"\$query": query, "\$orderby" : orderby}, (error, cursor) -> 
+      message_collection.find query, limit, (error, cursor) -> 
         if error 
           callback error
         else 
@@ -44,7 +44,7 @@ MessageProvider::findLocal: (lat, lng, distance, callback) ->
             if error 
               callback error
             else 
-              callback null, results
+              callback null, results.reverse()
 
 MessageProvider::save: (messages, callback) ->
   @getCollection (error, message_collection) ->
