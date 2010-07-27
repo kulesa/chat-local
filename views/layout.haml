@@ -1,0 +1,16 @@
+!!!
+%html
+  %head
+    %title= title
+    %script{ type: "text/javascript", src: "http://www.google.com/jsapi?autoload={'modules':[{name:'maps',version:3,other_params:'sensor=false'" + decodeURI("%7d") + ", {'name': 'jquery', 'version':'1.4.2'" + decodeURI("%7d") + "]" + decodeURI("%7d")}
+    %script{ src: '/javascripts/distancewidget.js' }
+    %script{ src: '/javascripts/initmap.js' }
+    %script{ src: '/javascripts/app.js' }
+    %link{ rel: 'stylesheet', href: '/stylesheets/style.css' }
+  %body
+    #map-wrapper
+      #map-canvas
+    #wrapper
+      %h1 chat.local
+      %h3#where around somewhere
+      = body

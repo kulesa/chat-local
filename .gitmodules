@@ -1,0 +1,6 @@
+[submodule "lib/express"]
+	path = lib/express
+	url = http://github.com/visionmedia/express.git
+[submodule "lib/connect"]
+	path = lib/connect
+	url = http://github.com/senchalabs/connect.git

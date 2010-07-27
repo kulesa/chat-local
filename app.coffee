@@ -1,91 +1,95 @@
-kiwi: require 'kiwi'
-kiwi.require 'express'
-require 'express/plugins'
-utils: require 'express/utils'
-http: require 'express/http'
-kiwi.seed 'mongodb-native'
+mongoDbPath: '../../js/node-mongodb-native/lib/mongodb'
+
+express: require 'express'
+connect: require 'connect'
+mongodb: require mongoDbPath
 
 MessageProvider: require('./messages-mongodb').MessageProvider
 messageProvider: new MessageProvider 'localhost', 27017
 
-configure( -> 
-  use Logger
-  use MethodOverride
-  use ContentLength
-  use Cookie
-  use Cache, { lifetime: (5).minutes, reapInterval: (1).minute }
-  use Session, { lifetime: (15).minutes, reapInterval: (1).minute }  
-  use Static
-  set 'root', __dirname
-)
+pub: __dirname + '/public'
+app: express.createServer(
+  connect.logger(),
+  connect.methodOverride(),
+  connect.bodyDecoder(),
+  connect.cookieDecoder(),
+  # connect.cache { lifetime: (5).minutes, reapInterval: (1).minute }
+  connect.session(), 
+  connect.compiler({ src: pub, enable: ['sass'] }),
+  connect.staticProvider(pub)
+  )
 
-get '/', ->
-  @redirect '/chat'
+app.configure ->
+  app.use connect.errorHandler({ showStack: true, dumpExceptions: true })
+  app.set 'view engine', 'haml'
+  app.set 'views', __dirname + '/views' 
 
-get '/chat', -> 
-  @session.name: or 'Guest'
-  @session.lat: or 37.790234970864
-  @session.lng: or -122.39031314844
-  @session.distance: or 50
-  @session.updated: false
+app.configure 'development', ->
+  app.set 'reload views', 200
 
-  messageProvider.findLocal @session.lat, @session.lng, @session.distance, (err, messages) => 
-    @render 'chat.html.haml', {
+app.get '/', (req, res) ->
+  res.redirect '/chat'
+
+app.get '/chat', (req, res) -> 
+  req.session.name: or 'Guest'
+  req.session.lat: or 37.790234970864
+  req.session.lng: or -122.39031314844
+  req.session.distance: or 50
+  req.session.updated: false
+  messageProvider.findLocal req.session.lat, req.session.lng, req.session.distance, (err, messages) => 
+    res.render 'chat', {
       locals: {
         title: 'Chat.local',
         messages: messages
-        name: @session.name
+        name: req.session.name
       }
     }
 
-post '/updateLocation', -> 
-  @session.lat: @param 'lat'
-  @session.lng: @param 'lng'
-  @session.distance: @param 'distance'
-  @session.updated: true
-  @respond 200
+app.post '/updateLocation', (req, res) -> 
+  req.session.lat: req.param 'lat'
+  req.session.lng: req.param 'lng'
+  req.session.distance: req.param 'distance'
+  req.session.updated: true
+  res.send 200
   
-post '/chat', ->     
-  @session.name = utils.escape(@param('name'))
+app.post '/chat', (req, res) ->     
+  console.log ">>> post /chat: " + req.session.updated
+  req.session.name = escape(req.param('name'))
   messageProvider.save {
-    name: @session.name
-    body: utils.escape(@param('message'))
+    name: req.session.name
+    body: req.param('message')
       .replace /(http:\/\/[^\s]+)/g, '<a href="$1" target="express-chat">$1</a>'
-      .replace /:\)/g, '<img src="/public/images/face-smile.png">'
+      .replace /:\)/g, '<img src="/images/face-smile.png">'
     time: new Date()
     location: {
-      lat: @param('lat')
-      lng: @param('lng')
+      lat: parseFloat(req.param('lat'))
+      lng: parseFloat(req.param('lng'))
     }
   }, (error, messages) =>
-    @respond 200
+    res.send 200
   
-get '/chat/messages', -> 
+app.get '/chat/messages', (req, res) -> 
+  console.log ">>> get /chat/messages: " + req.session.updated
   messageProvider.getCount (error, count) =>
+      console.log ">>> get /chat/messages -> getCount: " + req.session.updated
       previousLength: count   
       updateOnTimer: => 
-        messageProvider.getCount (err, cnt) =>           
-          if (cnt > previousLength) or @session.updated
-            messageProvider.findLocal @session.lat, @session.lng, @session.distance, (error, messages) => 
-              @session.updated: false
-              @contentType 'json'
+        messageProvider.getCount (err, cnt) =>    
+          if (cnt > previousLength) or req.session.updated
+            messageProvider.findLocal req.session.lat, req.session.lng, req.session.distance, (error, messages) => 
+              req.session.updated: false
               previousLength: cnt
               json_messages: messages.map (m) ->
                 {message: {name: m.name, body: m.body }}
-              @respond 200, JSON.stringify(json_messages)
+              res.contentType 'json'
+              res.send JSON.stringify(json_messages), 200
             clearInterval timer
       timer: setInterval updateOnTimer, 100 
 
-get '/*.css', (file) -> 
-  @render( file + '.css.sass', { layout: false })
-
-get '/error/view', -> 
-  @render 'does.not.exist'
-
-get '/error', -> 
+app.get '/error', (req, res) -> 
   throw new Error 'holy crap!'
 
-get '/favicon.ico', -> 
-  @notFound()
+app.get '/favicon.ico', (req, res) -> 
+  throw new Error 'nonono'
 
-run()
+app.listen 3000

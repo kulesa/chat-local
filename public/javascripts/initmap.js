@@ -17,8 +17,8 @@ function init() {
     minDistance: 1,
     maxDistance: 300,
     activeColor: '#59b',
-    sizerIcon: new google.maps.MarkerImage('/public/images/resize-off.png'),
-    activeSizerIcon: new google.maps.MarkerImage('/public/images/resize.png')
+    sizerIcon: new google.maps.MarkerImage('/images/resize-off.png'),
+    activeSizerIcon: new google.maps.MarkerImage('/images/resize.png')
   });
 
   google.maps.event.addListener(distanceWidget, 'distance_changed',

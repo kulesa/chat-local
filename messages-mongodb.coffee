@@ -1,6 +1,6 @@
-Db: require('mongodb/db').Db
-ObjectID: require('mongodb/bson/bson').ObjectID
-Server: require('mongodb/connection').Server
+Db: require('../../js/node-mongodb-native/lib/mongodb/db').Db
+ObjectID: require('../../js/node-mongodb-native/lib/mongodb/bson/bson').ObjectID
+Server: require('../../js/node-mongodb-native/lib/mongodb/connection').Server
 
 MessageProvider: (host, port) -> 
   @db: new Db('chat-local', new Server(host, port, {auto_reconnect: true}, {}))
@@ -51,6 +51,7 @@ MessageProvider::save: (messages, callback) ->
     if error 
       callback error
     else 
+      console.log JSON.stringify(messages)
       messages: [messages] unless messages.length?
       message_collection.insert messages, ->
         callback null, messages
