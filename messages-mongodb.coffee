@@ -31,8 +31,8 @@ MessageProvider::findLocal: (lat, lng, distance, callback) ->
     if error 
       callback error
     else 
-      center: [lat, lng]
-      radius: distance / 112.63
+      center: [parseFloat(lat), parseFloat(lng)]
+      radius: parseFloat(distance) / 112.63
       query: {"location" : {"\$within" : {"\$center" : [center, radius]}}}
       limit: {limit: 30, sort: [["_id", -1]] }
       console.log "Querying: " + lat.toString() + " : " + lng.toString() + ", " + distance.toString()
@@ -46,7 +46,18 @@ MessageProvider::findLocal: (lat, lng, distance, callback) ->
             else 
               callback null, results.reverse()
 
-MessageProvider::save: (messages, callback) ->
+MessageProvider::save: (message, callback) ->
+  messages: {
+    name: message['name']
+    body: message['message']
+      .replace /(http:\/\/[^\s]+)/g, '<a href="$1" target="express-chat">$1</a>'
+      .replace /:\)/g, '<img src="/images/face-smile.png">'
+    time: new Date()
+    location: {
+      lat: parseFloat(message['lat'])
+      lng: parseFloat(message['lng'])
+    }
+  }  
   @getCollection (error, message_collection) ->
     if error 
       callback error
