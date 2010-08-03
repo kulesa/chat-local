@@ -3,6 +3,8 @@ Geo-chat with node.js, Express, Coffeescript, MongoDB and Google Maps API v3
 
 This is a simple location-based chat, which I wrote to practice in Coffeescript, geospatial indexing in MongoDB and new version of Google Maps API. Drag marker on the map to your location, set the area you want to listen to, and chat with people in the area.  
 
+The chat is using [Socket.IO](http://github.com/LearnBoost/Socket.IO-node) for realtime communication.
+
 Google Maps widgets shamelessly borrowed from this article: [Fun with MVC Objects](http://code.google.com/intl/en-EN/apis/maps/articles/mvcfun.html), and Chat application is based on the example in [Express](http://github.com/visionmedia/express) repo. 
 
 Live Demo
@@ -19,7 +21,12 @@ Prequisites:
   0. [node.js](http://nodejs.org/)
   1. [Express](http://github.com/visionmedia/express)
   2. [CoffeeScript](http://jashkenas.github.com/coffee-script/)
-  2. [MongoDB](http://www.mongodb.org) 
+  3. [MongoDB](http://www.mongodb.org) 
+
+Install dependencies: 
+    
+    npm install connect express socket.io
+
 
 Download the code
 
