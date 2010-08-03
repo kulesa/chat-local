@@ -4,3 +4,6 @@
 [submodule "lib/connect"]
 	path = lib/connect
 	url = http://github.com/senchalabs/connect.git
+[submodule "lib/node-mongodb-native"]
+	path = lib/node-mongodb-native
+	url = http://github.com/christkv/node-mongodb-native.git
