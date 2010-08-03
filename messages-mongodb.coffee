@@ -1,6 +1,7 @@
-Db: require('../../js/node-mongodb-native/lib/mongodb/db').Db
-ObjectID: require('../../js/node-mongodb-native/lib/mongodb/bson/bson').ObjectID
-Server: require('../../js/node-mongodb-native/lib/mongodb/connection').Server
+mongoDbPath: './lib/node-mongodb-native/lib/mongodb'
+Db: require(mongoDbPath + '/db').Db
+ObjectID: require(mongoDbPath + '/bson/bson').ObjectID
+Server: require(mongoDbPath + '/connection').Server
 
 MessageProvider: (host, port) -> 
   @db: new Db('chat-local', new Server(host, port, {auto_reconnect: true}, {}))
