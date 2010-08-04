@@ -25,7 +25,7 @@ Prequisites:
 
 Install dependencies: 
     
-    npm install connect express socket.io
+    npm install connect express socket.io haml
 
 
 Download the code

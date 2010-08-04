@@ -306,3 +306,7 @@ RadiusWidget.prototype.distanceBetweenPoints_ = function(p1, p2) {
   var d = R * c;
   return d;
 };
+
+DistanceWidget.prototype.contains = function(lat, lng) {
+  return this.get('bounds').contains(new google.maps.LatLng(lat, lng))
+}

@@ -2,6 +2,7 @@ var distanceWidget;
 var map;
 var geocodeTimer;
 var profileMarkers = [];
+var clientWidgets = [];
 
 // Init map and widgets
 function init() {
@@ -63,6 +64,18 @@ function updatePosition() {
   }, 200);
 }
 
+// report current position, but don't update form and messages
+function reportIn() {
+  var p = distanceWidget.get('position');
+  var d = distanceWidget.get('distance');
+  socket.send(JSON.stringify({
+    'action': 'update position',
+    'lat': p.lat(), 
+    'lng': p.lng(), 
+    'distance': d 
+  })); 
+}
+
 function reverseGeocodePosition() {
   var pos = distanceWidget.get('position');
   var geocoder = new google.maps.Geocoder();
@@ -101,9 +114,6 @@ $(function(){
   return false
 })})
   
-function changeLocation(location) {
-  //TODO: add handler for changing location
-}
 
 // add message to the messages list
 function addMessage(message) {
@@ -112,21 +122,57 @@ function addMessage(message) {
     .get(0).scrollTop = $('#messages').get(0).scrollHeight
 }
 
-// where the client library is
+// Handle client markers
+function changeLocation(request) {
+  var position = new google.maps.LatLng(request['lat'], request['lng']),
+    id = request['id']; 
+    
+  // if this client is in bounds
+  if (distanceWidget.contains(request['lat'], request['lng'])) {
+    if (clientWidgets[id])
+      // if we know him - just change position of the marker
+      clientWidgets[id].set('position', position)
+    else
+      clientWidgets[id] = new ClientWidget({
+        map: map,
+        position: position, 
+        zIndex: 90
+      });
+  } else {
+    // event out of the bounds, remove it
+    removeClient(id);
+  }
+}
+
+// remove marker for disconnected client
+function removeClient(id) {
+  if (clientWidgets[id])
+    clientWidgets[id].destroy();
+  delete clientWidgets[id];
+}
+
+// Socket.IO
 io.setPath('/javascripts/Socket.IO/');
 var socket = new io.Socket('localhost', {port: 3000});
 
 if (socket.connect()) {
+  socket.send(JSON.stringify({'action': 'report in'}));
   socket.addEvent('message', function(data) {
     data = JSON.parse(data);
+    
     if(data['action'] == 'close'){
-      //TODO: add close handler
+      removeClient(data['id'])
     } 
     else if (data['action'] == 'chat') { 
       // check that sender is in our bounds
-      if (distanceWidget.get('bounds').contains(new google.maps.LatLng(data['lat'], data['lng'])))
+      if (distanceWidget.contains(data['lat'], data['lng']))
         addMessage(data) 
     } 
-    else if (data['action'] == 'update position') { changeLocatoin(data) };
+    else if (data['action'] == 'update position') { 
+        changeLocation(data) 
+    }
+    else if (data['action'] == 'report in') {
+      reportIn()  
+    };
   })
 }

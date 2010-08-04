@@ -71,10 +71,17 @@ socket.on 'connection', (client) ->
       console.log "Invalid JSON: $message"
       return false
     
+    console.log ">> Message received: " + json(request)
     request.id: client.sessionId
-    if request['message']
+    if request['action'] is 'chat'
       messageProvider.save request, -> 
         client.broadcast json(request)
+        
+    if request['action'] is 'update position'
+      client.broadcast json(request)
+      
+    if request['action'] is 'report in'  
+      client.broadcast json(request)
 
   client.on 'disconnect', -> 
     client.broadcast json({'id': client.sessionId, 'action': 'close'})

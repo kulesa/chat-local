@@ -36,7 +36,6 @@ MessageProvider::findLocal: (lat, lng, distance, callback) ->
       radius: parseFloat(distance) / 112.63
       query: {"location" : {"\$within" : {"\$center" : [center, radius]}}}
       limit: {limit: 30, sort: [["_id", -1]] }
-      console.log "Querying: " + lat.toString() + " : " + lng.toString() + ", " + distance.toString()
       message_collection.find query, limit, (error, cursor) -> 
         if error 
           callback error
@@ -63,7 +62,6 @@ MessageProvider::save: (message, callback) ->
     if error 
       callback error
     else 
-      console.log JSON.stringify(messages)
       messages: [messages] unless messages.length?
       message_collection.insert messages, ->
         callback null, messages
