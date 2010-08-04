@@ -1,5 +1,4 @@
 %ul#messages
-  = partial('message', messages)
 %form{ method: 'post' }
   %input{ type: 'hidden', name: '_method', value: 'put' }
   %input{ type: 'text', name: 'name', value: name || 'guest' }

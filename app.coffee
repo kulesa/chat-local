@@ -39,14 +39,12 @@ app.get '/chat', (req, res) ->
   req.session.lng: or -122.39031314844
   req.session.distance: or 50
 
-  messageProvider.findLocal req.session.lat, req.session.lng, req.session.distance, (err, messages) => 
-    res.render 'chat', {
-      locals: {
-        title: 'Chat.local',
-        messages: messages
-        name: req.session.name
-      }
+  res.render 'chat', {
+    locals: {
+      title: 'Chat.local',
+      name: req.session.name
     }
+  }
 
 app.get '/chat/messages', (req, res)-> 
   req.session.lat: req.param('lat')
@@ -56,7 +54,7 @@ app.get '/chat/messages', (req, res)->
   messageProvider.findLocal req.session.lat, req.session.lng, req.session.distance, (error, messages) -> 
     res.contentType 'json'
     json_messages: messages.map (m) ->
-      {message: {name: m.name, message: m.body }}
+      {message: {name: m.name, message: m.body, id: m.sessionId }}
     res.send json(json_messages), 200
 
 app.get '/error', (req, res) -> 
@@ -71,16 +69,12 @@ socket.on 'connection', (client) ->
       console.log "Invalid JSON: $message"
       return false
     
-    console.log ">> Message received: " + json(request)
     request.id: client.sessionId
     if request['action'] is 'chat'
       messageProvider.save request, -> 
         client.broadcast json(request)
         
-    if request['action'] is 'update position'
-      client.broadcast json(request)
-      
-    if request['action'] is 'report in'  
+    if request['action'] in ['update position', 'report in']
       client.broadcast json(request)
 
   client.on 'disconnect', -> 

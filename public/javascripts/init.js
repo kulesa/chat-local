@@ -1,6 +1,6 @@
 var distanceWidget;
 var map;
-var geocodeTimer;
+var timer;
 var profileMarkers = [];
 var clientWidgets = [];
 
@@ -23,57 +23,55 @@ function init() {
     activeSizerIcon: new google.maps.MarkerImage('/images/resize.png')
   });
 
-  google.maps.event.addListener(distanceWidget, 'distance_changed', updatePosition);
-  google.maps.event.addListener(distanceWidget, 'position_changed', updatePosition);
+  google.maps.event.addListener(distanceWidget, 'distance_changed', positionChanged);
+  google.maps.event.addListener(distanceWidget, 'position_changed', positionChanged);
   map.fitBounds(distanceWidget.get('bounds'));
 
-  updatePosition();
+  positionChanged();
 }
 
-function updatePosition() {
-  var p = distanceWidget.get('position');
-  var d = distanceWidget.get('distance');
-  $('input[name=distance]').val(d.toFixed(2));
-  $('input[name=lat]').val(p.lat());
-  $('input[name=lng]').val(p.lng());
-    
-  if (geocodeTimer) {
-    window.clearTimeout(geocodeTimer);
+function positionChanged() {
+  // send location update
+  reportPosition();
+  
+  if (timer) {
+    window.clearTimeout(timer);
   }
   
   // Throttle the geo query so we don't hit the limit
-  geocodeTimer = window.setTimeout(function() {
+  timer = window.setTimeout(function() {
+    var p = distanceWidget.get('position');
+    var d = distanceWidget.get('distance');
+    $('input[name=distance]').val(d.toFixed(2));
+    $('input[name=lat]').val(p.lat());
+    $('input[name=lng]').val(p.lng());
     // reload messages for the changed location
-      $.getJSON('/chat/messages',
+    $.getJSON('/chat/messages',
         {lat: p.lat(), lng: p.lng(), distance: d }, 
         function(messages){
            $('#messages').empty();
            $.each(messages, function(i, msg){
               addMessage(msg['message']);
            })});
-    
-    // send location update
-       socket.send(JSON.stringify({
-         'action': 'update position',
-         'lat': p.lat(), 
-         'lng': p.lng(), 
-         'distance': d 
-       }));
+        
     // update address information
     reverseGeocodePosition();
   }, 200);
 }
 
-// report current position, but don't update form and messages
-function reportIn() {
-  var p = distanceWidget.get('position');
-  var d = distanceWidget.get('distance');
+// report current position to server
+function reportPosition() {
+  var p = distanceWidget.get('position'),
+      d = distanceWidget.get('distance'),
+      name = $('input[name=name]');
+      
   socket.send(JSON.stringify({
     'action': 'update position',
     'lat': p.lat(), 
     'lng': p.lng(), 
-    'distance': d 
-  })); 
+    'distance': d, 
+    'name': name.val() 
+  }));
 }
 
 function reverseGeocodePosition() {
@@ -112,20 +110,31 @@ $(function(){
   else
     message.css('border', '1px solid red')
   return false
-})})
-  
+  });
+});
+
+$(function() {
+  $('#messages li').hover(
+    function(){
+      alert("FUUUCK");
+    },
+    function(){}
+  )
+});
 
 // add message to the messages list
 function addMessage(message) {
+  var sessionId = message['id'] || socket.transport.sessionid
   $('#messages')
-    .append('<li>' + message['name'] + ': ' + message['message'] + '</li>')
+    .append('<li class="' + sessionId + '">' + message['name'] + ': ' + message['message'] + '</li>')
     .get(0).scrollTop = $('#messages').get(0).scrollHeight
 }
 
 // Handle client markers
 function changeLocation(request) {
   var position = new google.maps.LatLng(request['lat'], request['lng']),
-    id = request['id']; 
+    id = request['id'], 
+    name = request['name']; 
     
   // if this client is in bounds
   if (distanceWidget.contains(request['lat'], request['lng'])) {
@@ -136,10 +145,12 @@ function changeLocation(request) {
       clientWidgets[id] = new ClientWidget({
         map: map,
         position: position, 
-        zIndex: 90
+        zIndex: 90, 
+        sessionId: id, 
+        userName: name
       });
   } else {
-    // event out of the bounds, remove it
+    // event out of the bounds, remove client from the map
     removeClient(id);
   }
 }
@@ -156,23 +167,29 @@ io.setPath('/javascripts/Socket.IO/');
 var socket = new io.Socket('localhost', {port: 3000});
 
 if (socket.connect()) {
+  // ask other clients in the area to report
   socket.send(JSON.stringify({'action': 'report in'}));
+  
   socket.addEvent('message', function(data) {
     data = JSON.parse(data);
     
-    if(data['action'] == 'close'){
-      removeClient(data['id'])
-    } 
-    else if (data['action'] == 'chat') { 
-      // check that sender is in our bounds
-      if (distanceWidget.contains(data['lat'], data['lng']))
-        addMessage(data) 
-    } 
-    else if (data['action'] == 'update position') { 
-        changeLocation(data) 
+    switch (data['action']) {
+      case 'chat':
+        // check that sender is in our bounds
+        if (distanceWidget.contains(data['lat'], data['lng']))
+          addMessage(data);
+        break;
+      
+      case 'update position':
+        changeLocation(data); 
+        break;
+        
+      case 'report in': 
+        reportPosition();
+        break;
+        
+      case 'close':
+        removeClient(data['id']);
     }
-    else if (data['action'] == 'report in') {
-      reportIn()  
-    };
   })
 }

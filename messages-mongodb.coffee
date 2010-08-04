@@ -57,6 +57,7 @@ MessageProvider::save: (message, callback) ->
       lat: parseFloat(message['lat'])
       lng: parseFloat(message['lng'])
     }
+    sessionId: message['id']
   }  
   @getCollection (error, message_collection) ->
     if error 

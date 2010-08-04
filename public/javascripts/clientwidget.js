@@ -39,6 +39,17 @@ function ClientWidget(opt_options) {
   marker.bindTo('position', this);
   
   this.set('marker', marker);
+
+  me = this;  
+  var infoWindow = new google.maps.InfoWindow({
+    content: me.get('userName')
+  });
+  
+  infoWindow.bindTo('zIndex', this);
+  
+  google.maps.event.addListener(marker, 'click', function() {
+    infoWindow.open(me.get('map'), marker);
+  });
 }
 
 ClientWidget.prototype = new google.maps.MVCObject();
