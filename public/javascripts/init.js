@@ -4,6 +4,16 @@ var timer;
 var profileMarkers = [];
 var clientWidgets = [];
 
+// client-side escapting
+String.prototype.escapeHTML = function () {                                        
+    return(                                                                 
+        this.replace(/&/g,'&amp;').                                         
+            replace(/>/g,'&gt;').                                           
+            replace(/</g,'&lt;').                                           
+            replace(/"/g,'&quot;')                                         
+    );                                                                      
+};
+
 // Init map and widgets
 function init() {
   var mapDiv = document.getElementById('map-canvas');
@@ -113,20 +123,11 @@ $(function(){
   });
 });
 
-$(function() {
-  $('#messages li').hover(
-    function(){
-      alert("FUUUCK");
-    },
-    function(){}
-  )
-});
-
 // add message to the messages list
 function addMessage(message) {
   var sessionId = message['id'] || socket.transport.sessionid
   $('#messages')
-    .append('<li class="' + sessionId + '">' + message['name'] + ': ' + message['message'] + '</li>')
+    .append('<li class="' + sessionId + '">' + message['name'].escapeHTML() + ': ' + message['message'].escapeHTML() + '</li>')
     .get(0).scrollTop = $('#messages').get(0).scrollHeight
 }
 
@@ -193,3 +194,4 @@ if (socket.connect()) {
     }
   })
 }
+

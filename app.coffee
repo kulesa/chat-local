@@ -66,7 +66,6 @@ socket.on 'connection', (client) ->
     request.id = client.sessionId
     
     if request['action'] is 'chat'
-      #TODO: escape message
       messageProvider.save request, -> 
         client.broadcast json(request)
         
